@@ -1,53 +1,100 @@
 package main
 
 import (
-	"github.com/bwmarrin/discordgo"
-	"log"
+    "github.com/bwmarrin/discordgo"
+    "github.com/DaikiYamakawa/deepl-go"
+    "context"
+    "github.com/apex/log"
 )
 
+var deepL *deepl.Client
+
 var commands = []*discordgo.ApplicationCommand{
-	{
-		Type: discordgo.MessageApplicationCommand,
-		Name: "translate",
-	},
+    {
+        Type: discordgo.MessageApplicationCommand,
+        Name: "translate",
+    },
 }
 
 func RegisterCommands(dg *discordgo.Session, guildID string) {
-	for _, v := range commands {
-		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, guildID, v)
-		if err != nil {
-			log.Printf("Cannot create '%v' command: %v", v.Name, err)
-		}
-	}
-	dg.AddHandler(commandHandler)
+
+    // create a deepL client
+    var err error
+    deepL, err = deepl.New("https://api-free.deepl.com", nil)
+    if err != nil {
+        log.WithError(err).Error("failed to create deepL client")
+        return
+    }
+
+    // register the commands
+    for _, v := range commands {
+        _, err := dg.ApplicationCommandCreate(dg.State.User.ID, guildID, v)
+        if err != nil {
+            log.WithError(err).Error("failed to register command: " + v.Name)
+            return
+        }
+    }
+
+    // add the command handler
+    dg.AddHandler(commandHandler)
 }
 
 func commandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-	if i.Type != discordgo.InteractionApplicationCommand {
-		return
-	}
-	data := i.ApplicationCommandData()
+    // only react on application commands
+    if i.Type != discordgo.InteractionApplicationCommand {
+        return
+    }
 
-	switch data.Name {
-	case "translate":
-		handleTranslate(s, i)
-	}
+    data := i.ApplicationCommandData()
+    switch data.Name {
+    case "translate":
+        handleTranslate(s, i)
+    }
 
 }
 func handleTranslate(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content:         "test",
-			Components:      nil,
-			Embeds:          nil,
-			AllowedMentions: nil,
-			Flags:           uint64(discordgo.MessageFlagsEphemeral),
-			Files:           nil,
-			Choices:         nil,
-			CustomID:        "",
-			Title:           "",
-		},
-	})
+
+    data := i.ApplicationCommandData()
+    content := data.Resolved.Messages[data.TargetID].Content
+
+    // translate the content
+    translated, err := deepL.TranslateSentence(context.Background(), content, "", "EN")
+
+    if err != nil {
+        log.WithError(err).Error("failed to translate sentence")
+
+        // send error message as an Ephemeral
+        s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+            Type: discordgo.InteractionResponseChannelMessageWithSource,
+            Data: &discordgo.InteractionResponseData{
+                Content:         err.Error(),
+                Components:      nil,
+                Embeds:          nil,
+                AllowedMentions: nil,
+                Flags:           uint64(discordgo.MessageFlagsEphemeral),
+                Files:           nil,
+                Choices:         nil,
+                CustomID:        "",
+                Title:           "",
+            },
+        })
+        return
+    }
+
+    // send the translated text as an Ephemeral
+    s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+        Type: discordgo.InteractionResponseChannelMessageWithSource,
+        Data: &discordgo.InteractionResponseData{
+            Content:         translated.Translations[0].Text,
+            Components:      nil,
+            Embeds:          nil,
+            AllowedMentions: nil,
+            Flags:           uint64(discordgo.MessageFlagsEphemeral),
+            Files:           nil,
+            Choices:         nil,
+            CustomID:        "",
+            Title:           "",
+        },
+    })
 }
