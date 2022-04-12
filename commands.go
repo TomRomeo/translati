@@ -68,9 +68,15 @@ func handleTranslate(s *discordgo.Session, i *discordgo.InteractionCreate) {
         s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
             Type: discordgo.InteractionResponseChannelMessageWithSource,
             Data: &discordgo.InteractionResponseData{
-                Content:         err.Error(),
+                Content:         "",
                 Components:      nil,
-                Embeds:          nil,
+                Embeds:          []*discordgo.MessageEmbed{
+                    {
+                        Title: "An Error occurred",
+                        Description: err.Error(),
+                        Color: 0xff0000,
+                    },
+                },
                 AllowedMentions: nil,
                 Flags:           uint64(discordgo.MessageFlagsEphemeral),
                 Files:           nil,
@@ -88,7 +94,26 @@ func handleTranslate(s *discordgo.Session, i *discordgo.InteractionCreate) {
         Data: &discordgo.InteractionResponseData{
             Content:         translated.Translations[0].Text,
             Components:      nil,
-            Embeds:          nil,
+            Embeds:          []*discordgo.MessageEmbed{
+                {
+                    Title: "Translated from: " + translated.Translations[0].DetectedSourceLanguage,
+                    Description: "",
+                    Color: 0x7289DA,
+                    Fields: []*discordgo.MessageEmbedField{
+                        {
+                            Name: "Original",
+                            Value: content,
+                        },
+                        {
+                            Name: "Translated",
+                            Value: translated.Translations[0].Text,
+                        },
+                    },
+                    Footer: &discordgo.MessageEmbedFooter{
+                        Text: "powered by deepl.com",
+                    },
+                },
+            },
             AllowedMentions: nil,
             Flags:           uint64(discordgo.MessageFlagsEphemeral),
             Files:           nil,
