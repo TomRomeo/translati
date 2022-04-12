@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/apex/log"
     "github.com/bwmarrin/discordgo"
     "github.com/joho/godotenv"
-    "github.com/apex/log"
     "os"
     "os/signal"
     "syscall"
@@ -32,7 +32,8 @@ func main() {
     log.Info("Successfully established a discord ws connection..")
 
     //register commands
-    RegisterCommands(dg, "862337011264126996")
+	//RegisterCommands(dg, "862337011264126996")
+	RegisterCommands(dg, "")
     log.Info("Registered command successfully...")
 
     log.Info("Ready to translate messages...")

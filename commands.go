@@ -68,9 +68,13 @@ func handleTranslate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
     data := i.ApplicationCommandData()
     content := data.Resolved.Messages[data.TargetID].Content
+	guild, err := s.Guild(i.GuildID)
+	if err != nil {
+		log.WithError(err).Error("failed to get guild")
+	}
 
     // translate the content
-	log.Info(fmt.Sprintf("%s (%s) translated: '%s'", i.Member.User.Username, i.Member.User.ID, content))
+	log.Info(fmt.Sprintf("%s (%s) in %s (%s) translated: '%s'", i.Member.User.Username, i.Member.User.ID, guild.Name, guild.ID, content))
     translated, err := deepL.TranslateSentence(context.Background(), content, "", "EN")
 
     if err != nil {
