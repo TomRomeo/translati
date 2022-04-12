@@ -1,0 +1,32 @@
+---
+kind: pipeline
+type: exec
+os: linux
+arch: amd64
+
+name: CD
+
+steps:
+- name: stop containers
+  commands:
+    - docker-compose down
+  failure: ignore
+- name: update images
+  commands:
+    - docker-compose pull
+- name: deploy containers
+  commands:
+    - docker-compose up -d --build
+  environment:
+    BOT_KEY:
+      from_secret: BOT_KEY
+    DEEPL_API_KEY:
+      from_secret: DEEPL_API_KEY
+trigger:
+  branch:
+    - main
+---
+kind: signature
+hmac: 49bc1b03dc9703cbee8a1278a5b3ba5faf23ef5b6096b03bf462e248c309ffdd
+
+...

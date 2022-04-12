@@ -1,11 +1,11 @@
 package main
 
 import (
-    "github.com/bwmarrin/discordgo"
-    "github.com/DaikiYamakawa/deepl-go"
     "context"
     "fmt"
+	"github.com/DaikiYamakawa/deepl-go"
     "github.com/apex/log"
+	"github.com/bwmarrin/discordgo"
 )
 
 var deepL *deepl.Client
@@ -36,7 +36,6 @@ func RegisterCommands(dg *discordgo.Session, guildID string) {
         return
     }
     log.Info(fmt.Sprintf("%+v", ai))
-
 
     // register the commands
     for _, v := range commands {
@@ -71,6 +70,7 @@ func handleTranslate(s *discordgo.Session, i *discordgo.InteractionCreate) {
     content := data.Resolved.Messages[data.TargetID].Content
 
     // translate the content
+	log.Info(fmt.Sprintf("%s (%s) translated: '%s'", i.Member.User.Username, i.Member.User.ID, content))
     translated, err := deepL.TranslateSentence(context.Background(), content, "", "EN")
 
     if err != nil {

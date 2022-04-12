@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  translati:
+    build:
+      context: .
+    environment:
+      BOT_KEY:
+      DEEPL_API_KEY:
+    container_name: translati
+    restart: "on-failure:5"
