@@ -4,6 +4,7 @@ import (
     "github.com/bwmarrin/discordgo"
     "github.com/DaikiYamakawa/deepl-go"
     "context"
+    "fmt"
     "github.com/apex/log"
 )
 
@@ -25,6 +26,17 @@ func RegisterCommands(dg *discordgo.Session, guildID string) {
         log.WithError(err).Error("failed to create deepL client")
         return
     }
+
+    // log deepL information
+    log.Info("deepL client created")
+    log.Info("deepL client info:")
+    ai, err := deepL.GetAccountStatus(context.Background())
+    if err != nil {
+        log.WithError(err).Error("failed to get deepL account info")
+        return
+    }
+    log.Info(fmt.Sprintf("%+v", ai))
+
 
     // register the commands
     for _, v := range commands {
@@ -92,7 +104,7 @@ func handleTranslate(s *discordgo.Session, i *discordgo.InteractionCreate) {
     s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
         Type: discordgo.InteractionResponseChannelMessageWithSource,
         Data: &discordgo.InteractionResponseData{
-            Content:         translated.Translations[0].Text,
+            Content:         "",
             Components:      nil,
             Embeds:          []*discordgo.MessageEmbed{
                 {
